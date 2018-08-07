@@ -11,6 +11,8 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com'
 };
 
+// =============== GET ===============
+
 app.get('/', (req, res) => {
   res.end('Hello!');
 });
@@ -33,6 +35,23 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
+// =============== POST ==============
+
+app.post('/urls', (req, res) => {
+  console.log(req.body);  // debug statement to see POST parameters
+  res.send('Ok');         // Respond with 'Ok' (we will replace this)
+});
+
+// ============== LISTEN =============
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+// ===================================
+
+
+
+function generateRandomString() {
+  return String.fromCharCode(...Array(6).fill(0).map( () => Math.floor(Math.random() * 36)).map( x => x + (x > 9 ? 55 : 48)));
+}
