@@ -1,7 +1,9 @@
+const bodyParser = require('body-parser');
 const express = require('express');
 const app = express();
 const PORT = 8000;
 
+app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 
 const urlDatabase = {
@@ -16,6 +18,10 @@ app.get('/', (req, res) => {
 app.get('/urls', (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
+});
+
+app.get('/urls/new', (req, res) => {
+  res.render('urls_new');
 });
 
 app.get('/urls/:id', (req, res) => {
