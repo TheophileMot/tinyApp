@@ -3,6 +3,13 @@ const express = require('express');
 const app = express();
 const PORT = 8000;
 
+
+function generateRandomString() {
+  return String.fromCharCode(...Array(6).fill(0).map( () => Math.floor(Math.random() * 36)).map( x => x + (x > 9 ? 55 : 48)));
+}
+
+// ========= server methods ==========
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 
@@ -31,6 +38,12 @@ app.get('/urls/:id', (req, res) => {
   res.render('urls_show', templateVars);
 });
 
+app.get('/u/:shortURL', (req, res) => {
+  let longURL = urlDatabase[req.params.shortURL];
+  console.log(longURL);
+  res.redirect(longURL);
+});
+
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
@@ -38,8 +51,11 @@ app.get('/urls.json', (req, res) => {
 // =============== POST ==============
 
 app.post('/urls', (req, res) => {
-  console.log(req.body);  // debug statement to see POST parameters
-  res.send('Ok');         // Respond with 'Ok' (we will replace this)
+  // to do: check if hash key already exists
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+
+  res.redirect('/urls/' + shortURL);
 });
 
 // ============== LISTEN =============
@@ -47,11 +63,3 @@ app.post('/urls', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-// ===================================
-
-
-
-function generateRandomString() {
-  return String.fromCharCode(...Array(6).fill(0).map( () => Math.floor(Math.random() * 36)).map( x => x + (x > 9 ? 55 : 48)));
-}
