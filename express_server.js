@@ -9,16 +9,32 @@ function generateRandomString() {
   return String.fromCharCode(...Array(6).fill(0).map( () => Math.floor(Math.random() * 36)).map( x => x + (x > 9 ? 55 : 48)));
 }
 
-// ========= server methods ==========
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.set('view engine', 'ejs');
+// ========= fake database ===========
 
 const urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com'
 };
+
+const users = {
+  'b9a0d3': {
+    id: 'b9a0d3',
+    email: 'peter@hotcakes.com',
+    password: 'purple-monkey-dinosaur'
+  },
+  'g9a0sd': {
+    id: 'g9a0sd',
+    email: 'susanne@yahoo.fr',
+    password: 'machin-chouette'
+  }
+};
+
+// ========= server methods ==========
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.set('view engine', 'ejs');
+app.use(express.static('public'));
 
 // =============== GET ===============
 
@@ -26,12 +42,15 @@ app.get('/', (req, res) => {
   res.redirect('/urls/new');
 });
 
+app.get('/register', (req, res) => {
+  res.render('register', { username: null });
+});
+
 app.get('/urls', (req, res) => {
   let templateVars = {
     urls: urlDatabase,
     username: req.cookies['username']
   };
-  console.log(templateVars);
   res.render('urls_index', templateVars);
 });
 
@@ -61,6 +80,11 @@ app.get('/urls.json', (req, res) => {
 });
 
 // =============== POST ==============
+
+app.post('/register', (req, res) => {
+  // res.cookie('username', req.body.username);
+  res.redirect('/');
+});
 
 app.post('/login', (req, res) => {
   res.cookie('username', req.body.username);
