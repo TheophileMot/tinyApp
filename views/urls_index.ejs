@@ -2,18 +2,19 @@
 <html lang="en">
 <head>
   <title>TinyApp</title>
+  <link rel='stylesheet' type='text/css' media='screen' href='/css/main.css'>
 </head>
 <body>
   <header>
-      <% include partials/_header %>
+    <% include partials/_header %>
   </header>
   <table>
   <% for (let url in urls) { %>
     <tr>
-      <td><%= url %></td><td>⟾</td><td><%= urls[url] %></td>
+      <td><%= url %></td><td>⤑</td><td><%= urls[url] %></td>
       <td><a href=<%= `/urls/${url}` %>>Edit</a></td>
       <td>
-        <form style="display: inline" action=<%= `/urls/${url}/delete` %> method="POST">
+        <form action=<%= `/urls/${url}/delete` %> method="POST">
           <label></label>
           <input type="submit" value="Delete">
         </form>
