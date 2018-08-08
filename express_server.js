@@ -53,9 +53,14 @@ app.post('/urls', (req, res) => {
   // to do: check if hash key already exists
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
-
   res.redirect('/urls/' + shortURL);
 });
+
+app.post('/urls/:id/delete', (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect('/urls');
+});
+
 
 // ============== LISTEN =============
 
