@@ -21,7 +21,7 @@ const urlDatabase = {
 // =============== GET ===============
 
 app.get('/', (req, res) => {
-  res.end('Hello!');
+  res.redirect('/urls/new');
 });
 
 app.get('/urls', (req, res) => {
@@ -73,5 +73,5 @@ app.post('/urls/:id/delete', (req, res) => {
 // ============== LISTEN =============
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 });
