@@ -56,6 +56,14 @@ app.post('/urls', (req, res) => {
   res.redirect('/urls/' + shortURL);
 });
 
+app.post('/urls/:id', (req, res) => {
+  // to do: validate
+  let { shortURL, longURL } = req.body;
+  urlDatabase[shortURL] = longURL;
+  res.redirect('/urls/' + shortURL);
+});
+
+
 app.post('/urls/:id/delete', (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect('/urls');
