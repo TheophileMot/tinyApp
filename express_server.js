@@ -1,5 +1,6 @@
 const bodyParser = require('body-parser');
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8000;
 
@@ -11,6 +12,7 @@ function generateRandomString() {
 // ========= server methods ==========
 
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.set('view engine', 'ejs');
 
 const urlDatabase = {
@@ -48,6 +50,12 @@ app.get('/urls.json', (req, res) => {
 });
 
 // =============== POST ==============
+
+app.post('/login', (req, res) => {
+  res.cookie('name', req.body.username);
+  res.redirect('/urls');
+});
+
 
 app.post('/urls', (req, res) => {
   // to do: check if hash key already exists
