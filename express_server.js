@@ -9,7 +9,7 @@ const bigInt = require('big-integer');
 
 // ======= string generation =========
 
-// very basic hash function (not cryptograpically secure!)
+// very basic hash function (not cryptograpically secure!) for URLs
 let hash = (function() {
   // First generate an array of primes deterministically. (These could just be hardcoded.)
   console.log('Precomputing some prime numbers...');
@@ -62,12 +62,21 @@ const users = {
   }
 };
 
-// ========= server methods ==========
+// ========== set up server ==========
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
+
+// =========== validation ============
+
+function doesEmailExist(email) {
+  for (let user in users) {
+    if (users[user].email === email ) { console.log(users[user].email); return true; }
+  }
+  return false;
+}
 
 // =============== GET ===============
 
@@ -117,9 +126,15 @@ app.get('/urls.json', (req, res) => {
 
 app.post('/register', (req, res) => {
   let { email, password } = req.body;
-  // email and password should not be empty because the form already validates them. But just in case...
+
+  // validate e-mail and password
   if (!email || !password) {
+    // email and password should not be empty because the form already validates them. But just in case...
     res.status(400).send('Bad request. How did you get around the form? Maybe you\'re cheating with curl?');
+    return;
+  }
+  if (doesEmailExist(email)) {
+    res.status(400).send('That e-mail address already exists.');
     return;
   }
 
@@ -165,6 +180,6 @@ app.post('/urls/:id/delete', (req, res) => {
 
 // ============== LISTEN =============
 
-app.listen(PORT, () => {  
+app.listen(PORT, () => {
   console.log(`TinyApp listening on port ${PORT}!`);
 });
