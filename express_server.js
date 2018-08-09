@@ -73,7 +73,7 @@ app.use(express.static('public'));
 
 function doesEmailExist(email) {
   for (let user in users) {
-    if (users[user].email === email ) { console.log(users[user].email); return true; }
+    if (users[user].email === email ) { return true; }
   }
   return false;
 }
@@ -85,20 +85,24 @@ app.get('/', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  res.render('register', { username: null });
+  res.render('register', { user: null });
+});
+
+app.get('/login', (req, res) => {
+  res.render('login', { user: null });
 });
 
 app.get('/urls', (req, res) => {
   let templateVars = {
     urls: urlDatabase,
-    username: req.cookies['username']
+    user: users[req.cookies.userID]
   };
   res.render('urls_index', templateVars);
 });
 
 app.get('/urls/new', (req, res) => {
   let templateVars = {
-    username: req.cookies['username']
+    user: users[req.cookies.userID]
   };
   res.render('urls_new', templateVars);
 });
@@ -108,7 +112,7 @@ app.get('/urls/:id', (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id],
-    username: req.cookies['username']
+    user: users[req.cookies.userID]
   };
   res.render('urls_show', templateVars);
 });
@@ -134,35 +138,43 @@ app.post('/register', (req, res) => {
     return;
   }
   if (doesEmailExist(email)) {
-    res.status(400).send('That e-mail address already exists.');
+    res.status(400).send('Error: that e-mail address already exists.');
     return;
   }
 
-  let randomID = generateRandomString();
-  users[randomID] = {
-    id: randomID,
+  let userHash = hash(email);
+  users[userHash] = {
+    id: userHash,
     email: email,
     password: password
   };
-  res.cookie('user_id', randomID);
+  res.cookie('userID', userHash);
   res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect('/urls');
+  let userID = hash(req.body.email);
+  if (!users[userID]) {
+    res.status(403).send('Error: no such user.');
+  }
+  if (users[userID].password !== req.body.password) {
+    res.status(403).send('Error: wrong password.');
+  }
+
+  res.cookie('userID', userID);
+  res.redirect('/');
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('userID');
   res.redirect('/urls');
 });
 
 app.post('/urls', (req, res) => {
   // to do: check if hash key already exists
-  let longUrl = req.body.longURL;
+  let longURL = req.body.longURL;
   let shortURL = hash(req.body.longURL);
-  urlDatabase[shortURL] = longUrl;
+  urlDatabase[shortURL] = longURL;
   res.redirect('/urls/' + shortURL);
 });
 
