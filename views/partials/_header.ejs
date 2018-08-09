@@ -3,22 +3,14 @@
 tinyApp URL shortener!
 </h1>
 <span style="width: 150px; display: inline-block"></span>
-<% if (username !== null) { %>
-  <% if (username) { %>
-    <h2>logged in as</h2> <h2 class="name"><%= username %></h2>
-    <span style="width: 30px; display: inline-block"></span>
-    <form style="display: inline" action="/logout" method="POST">
-      <input type="submit" value="Log out">
-    </form>
-  <% } else { %>
-    <form style="display: inline" action="/login" method="POST">
-      <h2 style="display: inline-block">
-        <label for="username">Enter user name:</label>
-      </h2>
-      <input id="username" type="text" name="username" placeholder="guest" required style="width: 100px">
-      <input type="submit" value="Log in">
-    </form>
-  <% } %>
+<% if (user) { %>
+  <h3 style="display: inline-block">currently logged in as <%= user.email %></h3>
+  <span style="width: 30px; display: inline-block"></span>
+  <form style="display: inline" action="/logout" method="POST">
+    <input type="submit" value="Log out">
+  </form>
+<% } else { %>
+  <a href="/login">Log in</a> | <a href="/register">Register</a>
 <% } %>
 
 </div>

@@ -1,0 +1,53 @@
+body {
+  background-color: #EEF;
+  font-size: 20px;
+  color: #316;
+  padding: 30px;
+  margin: 10px;
+}
+
+h1 {
+  color: #CCD;
+  text-align: center;
+  background-color: #315;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 30px;
+  padding: 5px;
+}
+
+h2 {
+  color: #EBD;
+  display: inline-block;
+  font-size: 16px;
+}
+
+h2.name {
+  color: #D8A;
+}
+
+table {
+  padding: 10px;
+  margin: 50px;
+}
+
+a {
+  color: #44D;
+}
+
+.bigMargin {
+  margin: 100px;
+}
+
+.longInput {
+  width: 300px;
+}
+
+/*/////////////*/
+
+html, body { height: 100%; }
+
+body {
+  font-size: 100%;
+  font-family: Georgia;
+  padding: 0 2em;
+}
