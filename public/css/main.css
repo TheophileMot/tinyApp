@@ -4,6 +4,7 @@ body {
   color: #316;
   padding: 30px;
   margin: 10px;
+  padding: 20px;
 }
 
 h1 {
@@ -25,6 +26,25 @@ h2.name {
   color: #D8A;
 }
 
+h3 {
+  color: #205;
+  font-size: 16px;
+  display: inline-block;
+}
+
+.legend {
+  color: #205;
+  font-size:36px;
+}
+
+.right {
+  text-align: right;
+}
+
+form {
+  width: 50%;
+}
+
 table {
   padding: 10px;
   margin: 50px;
@@ -40,14 +60,4 @@ a {
 
 .longInput {
   width: 300px;
-}
-
-/*/////////////*/
-
-html, body { height: 100%; }
-
-body {
-  font-size: 100%;
-  font-family: Georgia;
-  padding: 0 2em;
 }

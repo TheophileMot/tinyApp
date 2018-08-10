@@ -5,11 +5,13 @@
     <link rel='stylesheet' type='text/css' media='screen' href='/css/main.css'>
   </head>
   <body>
-    <% include partials/_header %>
+    <header>
+      <% include partials/_header %>
+    </header>
     <form class="bigMargin" action="/urls" method="POST">
       <label for="longURL">Enter a URL:</label>
       <input class="longInput" id="longURL" type="text" name="longURL" placeholder="http://" required>
-      <input type="submit" value="Submit">
+      <input type="submit" value="Shorten!">
     </form>
   </body>
 </html>

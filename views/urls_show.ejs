@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <title>TinyApp</title>
-  <link rel='stylesheet' type='text/css' media='screen' href='/css/main.css'>
-</head>
-<body>
-  <header>
+  <head>
+    <title>TinyApp</title>
+    <link rel='stylesheet' type='text/css' media='screen' href='/css/main.css'>
+  </head>
+  <body>
+    <header>
       <% include partials/_header %>
-  </header>
-  <%=  shortURL %> ⟾ <%= longURL %>
-  <form action=<%= `/urls/${shortURL}` %> method="POST">
-    <label for="longURL">Update URL:</label>
-    <input type="hidden" value=<%= shortURL %> name="shortURL">
-    <input class="longInput" id="longURL" type="text" name="longURL" placeholder="http://" required>
-    <input type="submit" value="Update">
-  </form>
-  <p>
-    Back to <a href="/urls">index</a>
-  </p>
-</body>
+    </header>
+    <%=  shortURL %> ⟾ <%= longURL %>
+    <form action=<%= `/urls/${shortURL}` %> method="POST">
+      <label for="longURL">Update URL:</label>
+      <input type="hidden" value=<%= shortURL %> name="shortURL">
+      <input class="longInput" id="longURL" type="text" name="longURL" placeholder="http://" required>
+      <input type="submit" value="Update">
+    </form>
+    <p>
+      Back to <a href="/urls">index</a>
+    </p>
+  </body>
 </html>

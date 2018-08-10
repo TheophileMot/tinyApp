@@ -39,28 +39,14 @@ let hash = (function() {
 }());
 
 function generateRandomString() {
-  return String.fromCharCode(...Array(6).fill(0).map( () => Math.floor(Math.random() * 36)).map( x => x + (x > 9 ? 87 : 48)));
+  return String.fromCharCode(...Array(8).fill(0).map( () => Math.floor(Math.random() * 36)).map( x => x + (x > 9 ? 87 : 48)));
 }
 
 // ========= fake database ===========
 
-const urlDatabase = {
-  '33zwdo81': 'http://www.lighthouselabs.ca',
-  'muvcjqsp': 'http://www.google.com'
-};
+const urlDatabase = {};
 
-const users = {
-  '6mvm00vd': {
-    id: '6mvm00vd',
-    email: 'peter@hotcakes.com',
-    password: 'purple-monkey-dinosaur'
-  },
-  'm7i5hivd': {
-    id: 'm7i5hivd',
-    email: 'susanne@yahoo.fr',
-    password: 'machin-chouette'
-  }
-};
+const users = {};
 
 // ========== set up server ==========
 
@@ -85,10 +71,16 @@ app.get('/', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
+  if (req.cookies.userID) {
+    res.redirect('/');
+  }
   res.render('register', { user: null });
 });
 
 app.get('/login', (req, res) => {
+  if (req.cookies.userID) {
+    res.redirect('/');
+  }
   res.render('login', { user: null });
 });
 
@@ -101,14 +93,19 @@ app.get('/urls', (req, res) => {
 });
 
 app.get('/urls/new', (req, res) => {
+  // make user log in before they can shorten a new URL
+  if (!req.cookies.userID) {
+    res.redirect('/login');
+  }
   let templateVars = {
     user: users[req.cookies.userID]
   };
+
   res.render('urls_new', templateVars);
 });
 
 app.get('/urls/:id', (req, res) => {
-  // to do: validate
+  // TODO: validate
   let templateVars = {
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id],
@@ -171,15 +168,14 @@ app.post('/logout', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
-  // to do: check if hash key already exists
   let longURL = req.body.longURL;
-  let shortURL = hash(req.body.longURL);
+  let shortURL = generateRandomString();
   urlDatabase[shortURL] = longURL;
   res.redirect('/urls/' + shortURL);
 });
 
 app.post('/urls/:id', (req, res) => {
-  // to do: validate
+  // TODO: validate
   let { shortURL, longURL } = req.body;
   urlDatabase[shortURL] = longURL;
   res.redirect('/urls/' + shortURL);

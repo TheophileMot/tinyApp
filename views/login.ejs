@@ -2,17 +2,24 @@
 <html lang="en">
   <head>
     <title>TinyApp</title>
+    <link rel='stylesheet' type='text/css' media='screen' href='/css/main.css'>
   </head>
   <body>
     <header>
         <% include partials/_header %>
     </header>
-    <form action="/login" method="POST">
-      <label for="email">e-mail:</label>
-      <input id="email" type="email" name="email" required>
-      <label for="password">password:</label>
-      <input id="password" type="password" name="password" required>
-      <input type="submit" value="Submit">
-    </form>
+    <div class="bigMargin">
+      <form action="/login" method="POST">
+        <fieldset>
+          <legend><span class="legend">Log in</span></legend>
+          <label for="email">e-mail:</label>
+          <input id="email" type="email" name="email" required>
+          <label for="password">password:</label>
+          <input id="password" type="password" name="password" required>
+          <input type="submit" value="Log in">        
+          <p class="right">or <a href="/register">Register</a></p>
+        </fieldset>
+      </form>
+    </div>
   </body>
 </html>
