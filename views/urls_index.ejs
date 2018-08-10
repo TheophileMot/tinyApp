@@ -12,10 +12,13 @@
       <% if (!Object.keys(urls).length) { %>
         <p>You have no saved shortcuts.</p>
       <% } else { %>
+        <h2>hint: click on the clipboard to copy the link</h2>
         <table>
           <% for (let url in urls) { %>
             <tr>
-              <td><%= url %></td><td>⤑</td><td><%= urls[url].URL %></td>
+              <td>
+                <button class="icon" onclick="copyToClipboard('http://localhost:8000/u/<%= url %>')">📋</button>
+                <%= url %></td><td>⤑</td><td><%= urls[url].URL %></td>
               <td>
                 <form action=<%= `/urls/${url}` %> method="GET">
                   <label></label>
