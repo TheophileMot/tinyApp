@@ -4,39 +4,7 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8000;
 
-// big integer module for hash function
-const bigInt = require('big-integer');
-
 // ======= string generation =========
-
-// very basic hash function (not cryptograpically secure!)
-let hash = (function() {
-  // First generate an array of primes deterministically. (These could just be hardcoded.)
-  console.log('Precomputing some prime numbers...');
-  const primes = [];
-  const NUM_PRIMES = 200;
-  const MODULUS = bigInt(36).pow(8);
-  const THRESHOLD = bigInt(2).pow(24);
-
-  // calculate some primes, making sure that each one is big (≥ THRESHOLD) mod MODULUS
-  let p = bigInt(5);
-  for (let i = 0; i < NUM_PRIMES; i++) {
-    while (!p.isPrime() || p.mod(MODULUS).lt(THRESHOLD)) { p = p = p.modPow(2, MODULUS); }
-    primes.push(p);
-    p = p.modPow(2, MODULUS);
-  }
-
-  return function(str) {
-    let sum = bigInt(0);
-    // split str into an array of its char codes; multiply each one by the corresponding prime, add to sum, then square mod MODULUS
-    let charCodes = str.split('').map( c => c.charCodeAt() );
-    for (let i in charCodes) {
-      sum = sum.plus(bigInt(charCodes[i]).times(primes[i]));
-      sum = sum.modPow(2, MODULUS);
-    }
-    return sum.toString(36);
-  };
-}());
 
 // return string of 8 characters in [0-9][a-z]
 function generateRandomString() {
@@ -79,6 +47,14 @@ const users = {
     password: 'b'
   }
 };
+function findIDfromEmail(email) {
+  for (let userID in users) {
+    if (users[userID].email === email) {
+      return userID;
+    }
+  }
+  return undefined;
+}
 
 // ========== set up server ==========
 
@@ -199,20 +175,24 @@ app.post('/register', (req, res) => {
     res.status(400).send('Error: that e-mail address already exists.');
     return;
   } else {
-    let userHash = hash(email);
-    users[userHash] = {
-      id: userHash,
+    let randomID = generateRandomString();
+    while (users[randomID]) {
+      // if the ID somehow already exists, try again
+      randomID = generateRandomString();
+    }
+    users[randomID] = {
+      id: randomID,
       email: email,
       password: password
     };
-    res.cookie('userID', userHash);
+    res.cookie('userID', randomID);
     res.redirect('/urls');
   }
 });
 
 app.post('/login', (req, res) => {
-  let userID = hash(req.body.email);
-  if (!users[userID]) {
+  let userID = findIDfromEmail(req.body.email);
+  if (!userID) {
     res.status(403).send('Error: no such user.');
   } else if (users[userID].password !== req.body.password) {
     res.status(403).send('Error: wrong password.');
