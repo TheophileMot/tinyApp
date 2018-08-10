@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "big-integer": "^1.6.34",
     "body-parser": "^1.18.3",
     "cookie-parser": "^1.4.3",

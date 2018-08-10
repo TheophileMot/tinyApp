@@ -13,7 +13,7 @@
         <h1>Sorry!</h1>
         <p>Either that link is invalid, or you don't have access to it.</p>
       <% } else { %>
-      <%=  shortURL %> ⟾ <%= longURL %>
+      <%=  shortURL %> ⤑ <span class="ghost"><%= longURL %></span>
         <form action=<%= `/urls/${shortURL}` %> method="POST">
           <label for="longURL">Update URL:</label>
           <input type="hidden" value=<%= shortURL %> name="shortURL">
