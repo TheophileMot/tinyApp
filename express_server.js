@@ -9,7 +9,7 @@ const bigInt = require('big-integer');
 
 // ======= string generation =========
 
-// very basic hash function (not cryptograpically secure!) for URLs
+// very basic hash function (not cryptograpically secure!)
 let hash = (function() {
   // First generate an array of primes deterministically. (These could just be hardcoded.)
   console.log('Precomputing some prime numbers...');
@@ -38,6 +38,7 @@ let hash = (function() {
   };
 }());
 
+// return string of 8 characters in [0-9][a-z]
 function generateRandomString() {
   return String.fromCharCode(...Array(8).fill(0).map( () => Math.floor(Math.random() * 36)).map( x => x + (x > 9 ? 87 : 48)));
 }
@@ -46,10 +47,19 @@ function generateRandomString() {
 
 // const urlDatabase = {
 //   '33zwdo81': {
-//     user: '6mvm00vd',
+//     owner: '6mvm00vd',
 //     URL: http://www.lighthouselabs.ca'
 //   }, ... }
 const urlDatabase = {};
+function filterByID(userID) {
+  let result = {};
+  for (let shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].owner === userID) {
+      result[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return result;
+}
 
 // const users = {
 //   '6mvm00vd': {
@@ -57,7 +67,18 @@ const urlDatabase = {};
 //     email: 'peter@hotcakes.com',
 //     password: 'purple-monkey-dinosaur'
 //   }, ... }
-const users = {};
+const users = {
+  'cfdulsgp': {
+    id: 'cfdulsgp',
+    email: 'a@a.a',
+    password: 'a'
+  },
+  'wbjj1i90': {
+    id: 'wbjj1i90',
+    email: 'b@b.b',
+    password: 'b'
+  }
+};
 
 // ========== set up server ==========
 
@@ -98,12 +119,14 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  if (!users[req.cookies.userID]) {
+  let userID = req.cookies.userID;
+
+  if (!users[userID]) {
     res.redirect('/login');
   } else {
     let templateVars = {
-      urls: urlDatabase,
-      email: users[req.cookies.userID].email
+      urls: filterByID(userID),
+      email: users[userID].email
     };
     res.render('urls_index', templateVars);
   }
@@ -123,25 +146,34 @@ app.get('/urls/new', (req, res) => {
 });
 
 app.get('/urls/:id', (req, res) => {
-  // redirect to start page if short URL doesn't exist in database
-  if (!urlDatabase[req.params.id]) {
-    res.redirect('/');
+  let userID = req.cookies.userID;
+  let shortURL = req.params.id;
+
+  if (!users[userID]) {
+    // make sure user is logged in
+    res.redirect('/login');
+  } else if (!urlDatabase[shortURL]) {
+    // redirect to index if short URL doesn't exist in database;
+    res.redirect('/urls');
+  } else if (urlDatabase[shortURL].owner !== userID) {
+    // redirect to index if URL doesn't belong to user
+    res.redirect('/urls');
   } else {
     let templateVars = {
       shortURL: req.params.id,
-      longURL: urlDatabase[req.params.id].URL,
-      email: users[req.cookies.userID].email
+      longURL: urlDatabase[shortURL].URL,
+      email: users[userID].email
     };
     res.render('urls_show', templateVars);
   }
 });
 
-app.get('/u/:shortURL', (req, res) => {
+app.get('/u/:id', (req, res) => {
   // redirect to start page if short URL doesn't exist in database
   if (!urlDatabase[req.params.id]) {
     res.redirect('/');
   } else {
-    let longURL = urlDatabase[req.params.shortURL].URL;
+    let longURL = urlDatabase[req.params.id].URL;
     res.redirect(longURL);
   }
 });
@@ -195,14 +227,13 @@ app.post('/logout', (req, res) => {
 app.post('/urls', (req, res) => {
   let longURL = req.body.longURL;
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = { user: req.cookies.userID, URL: longURL };
+  urlDatabase[shortURL] = { owner: req.cookies.userID, URL: longURL };
   res.redirect('/urls/' + shortURL);
 });
 
 app.post('/urls/:id', (req, res) => {
-  // TODO: validate
   let { shortURL, longURL } = req.body;
-  urlDatabase[shortURL] = { user: req.cookies.userID, URL: longURL };
+  urlDatabase[shortURL] = { owner: req.cookies.userID, URL: longURL };
   res.redirect('/urls/' + shortURL);
 });
 

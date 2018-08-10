@@ -8,10 +8,15 @@
     <header>
       <% include partials/_header %>
     </header>
-    <form class="bigMargin" action="/urls" method="POST">
-      <label for="longURL">Enter a URL:</label>
-      <input class="longInput" id="longURL" type="text" name="longURL" placeholder="http://" required>
-      <input type="submit" value="Shorten!">
-    </form>
+    <div class="bigMargin">
+      <form class="bigMargin" action="/urls" method="POST">
+        <label for="longURL">Enter a URL:</label>
+        <input class="longInput" id="longURL" type="text" name="longURL" placeholder="http://" required>
+        <input type="submit" value="Shorten!">
+      </form>
+      <p>
+        Back to <a href="/urls">index</a>
+      </p>
+    </div>
   </body>
 </html>
