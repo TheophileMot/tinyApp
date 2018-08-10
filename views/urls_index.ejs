@@ -8,22 +8,24 @@
     <header>
       <% include partials/_header %>
     </header>
-    <table>
-    <% for (let url in urls) { %>
-      <tr>
-        <td><%= url %></td><td>⤑</td><td><%= urls[url] %></td>
-        <td><a href=<%= `/urls/${url}` %>>Edit</a></td>
-        <td>
-          <form action=<%= `/urls/${url}/delete` %> method="POST">
-            <label></label>
-            <input type="submit" value="Delete">
-          </form>
-        </td>
-      </tr>
-    <%} %>
-    </table>
-    <p>
-      Shorten a <a href="/urls/new">new URL</a>
-    </p>
+    <div class="bigMargin">
+      <table>
+      <% for (let url in urls) { %>
+        <tr>
+          <td><%= url %></td><td>⤑</td><td><%= urls[url].URL %></td>
+          <td><a href=<%= `/urls/${url}` %>>Edit</a></td>
+          <td>
+            <form action=<%= `/urls/${url}/delete` %> method="POST">
+              <label></label>
+              <input type="submit" value="Delete">
+            </form>
+          </td>
+        </tr>
+      <%} %>
+      </table>
+      <p>
+        Shorten a <a href="/urls/new">new URL</a>
+      </p>
+    </div>
   </body>
 </html>

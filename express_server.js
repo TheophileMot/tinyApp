@@ -42,10 +42,21 @@ function generateRandomString() {
   return String.fromCharCode(...Array(8).fill(0).map( () => Math.floor(Math.random() * 36)).map( x => x + (x > 9 ? 87 : 48)));
 }
 
-// ========= fake database ===========
+// ========= fake databases ==========
 
+// const urlDatabase = {
+//   '33zwdo81': {
+//     user: '6mvm00vd',
+//     URL: http://www.lighthouselabs.ca'
+//   }, ... }
 const urlDatabase = {};
 
+// const users = {
+//   '6mvm00vd': {
+//     id: '6mvm00vd',
+//     email: 'peter@hotcakes.com',
+//     password: 'purple-monkey-dinosaur'
+//   }, ... }
 const users = {};
 
 // ========== set up server ==========
@@ -71,52 +82,68 @@ app.get('/', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  if (req.cookies.userID) {
+  if (users[req.cookies.userID]) {
     res.redirect('/');
+  } else {
+    res.render('register', { email: null });
   }
-  res.render('register', { user: null });
 });
 
 app.get('/login', (req, res) => {
-  if (req.cookies.userID) {
+  if (users[req.cookies.userID]) {
     res.redirect('/');
+  } else {
+    res.render('login', { email: null });
   }
-  res.render('login', { user: null });
 });
 
 app.get('/urls', (req, res) => {
-  let templateVars = {
-    urls: urlDatabase,
-    user: users[req.cookies.userID]
-  };
-  res.render('urls_index', templateVars);
+  if (!users[req.cookies.userID]) {
+    res.redirect('/login');
+  } else {
+    let templateVars = {
+      urls: urlDatabase,
+      email: users[req.cookies.userID].email
+    };
+    res.render('urls_index', templateVars);
+  }
 });
 
 app.get('/urls/new', (req, res) => {
   // make user log in before they can shorten a new URL
-  if (!req.cookies.userID) {
+  if (!users[req.cookies.userID]) {
     res.redirect('/login');
-  }
-  let templateVars = {
-    user: users[req.cookies.userID]
-  };
+  } else {
+    let templateVars = {
+      email: users[req.cookies.userID].email
+    };
 
-  res.render('urls_new', templateVars);
+    res.render('urls_new', templateVars);
+  }
 });
 
 app.get('/urls/:id', (req, res) => {
-  // TODO: validate
-  let templateVars = {
-    shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id],
-    user: users[req.cookies.userID]
-  };
-  res.render('urls_show', templateVars);
+  // redirect to start page if short URL doesn't exist in database
+  if (!urlDatabase[req.params.id]) {
+    res.redirect('/');
+  } else {
+    let templateVars = {
+      shortURL: req.params.id,
+      longURL: urlDatabase[req.params.id].URL,
+      email: users[req.cookies.userID].email
+    };
+    res.render('urls_show', templateVars);
+  }
 });
 
 app.get('/u/:shortURL', (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
+  // redirect to start page if short URL doesn't exist in database
+  if (!urlDatabase[req.params.id]) {
+    res.redirect('/');
+  } else {
+    let longURL = urlDatabase[req.params.shortURL].URL;
+    res.redirect(longURL);
+  }
 });
 
 app.get('/urls.json', (req, res) => {
@@ -133,33 +160,31 @@ app.post('/register', (req, res) => {
     // email and password should not be empty because the form already validates them. But just in case...
     res.status(400).send('Bad request. How did you get around the form? Maybe you\'re cheating with curl?');
     return;
-  }
-  if (doesEmailExist(email)) {
+  } else if (doesEmailExist(email)) {
     res.status(400).send('Error: that e-mail address already exists.');
     return;
+  } else {
+    let userHash = hash(email);
+    users[userHash] = {
+      id: userHash,
+      email: email,
+      password: password
+    };
+    res.cookie('userID', userHash);
+    res.redirect('/urls');
   }
-
-  let userHash = hash(email);
-  users[userHash] = {
-    id: userHash,
-    email: email,
-    password: password
-  };
-  res.cookie('userID', userHash);
-  res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
   let userID = hash(req.body.email);
   if (!users[userID]) {
     res.status(403).send('Error: no such user.');
-  }
-  if (users[userID].password !== req.body.password) {
+  } else if (users[userID].password !== req.body.password) {
     res.status(403).send('Error: wrong password.');
+  } else {
+    res.cookie('userID', userID);
+    res.redirect('/');
   }
-
-  res.cookie('userID', userID);
-  res.redirect('/');
 });
 
 app.post('/logout', (req, res) => {
@@ -170,14 +195,14 @@ app.post('/logout', (req, res) => {
 app.post('/urls', (req, res) => {
   let longURL = req.body.longURL;
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = { user: req.cookies.userID, URL: longURL };
   res.redirect('/urls/' + shortURL);
 });
 
 app.post('/urls/:id', (req, res) => {
   // TODO: validate
   let { shortURL, longURL } = req.body;
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = { user: req.cookies.userID, URL: longURL };
   res.redirect('/urls/' + shortURL);
 });
 

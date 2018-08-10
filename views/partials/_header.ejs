@@ -3,8 +3,8 @@
 tinyApp URL shortener!
 </h1>
 <span style="width: 150px; display: inline-block"></span>
-<% if (user) { %>
-  <h3>logged in as <%= user.email %></h3>
+<% if (email) { %>
+  <h3>logged in as <%= email %></h3>
   <span style="width: 30px; display: inline-block"></span>
   <form style="display: inline" action="/logout" method="POST">
     <input type="submit" value="Log out">
