@@ -152,12 +152,15 @@ app.get('/urls/:id', (req, res) => {
   if (!users[userID]) {
     // make sure user is logged in
     res.redirect('/login');
-  } else if (!urlDatabase[shortURL]) {
-    // redirect to index if short URL doesn't exist in database;
-    res.redirect('/urls');
-  } else if (urlDatabase[shortURL].owner !== userID) {
-    // redirect to index if URL doesn't belong to user
-    res.redirect('/urls');
+  } else if (!urlDatabase[shortURL] || urlDatabase[shortURL].owner !== userID) {
+    // give error message if short URL doesn't exist in database, or if URL doesn't belong to user
+    let templateVars = {
+      shortURL: null,
+      longURL: null,
+      email: users[userID].email
+    };
+    res.render('urls_show', templateVars);
+
   } else {
     let templateVars = {
       shortURL: req.params.id,
