@@ -13,4 +13,4 @@ Therefore, according to the behaviour requirements, a user who logs out will get
 
 # similar for **login** / **register** errors
 
-Instead of a 403 error, I send the user back to the **login** / **register** page with an appropriate error message.
+Instead of a 400 error, I send the user back to the **login** / **register** page with an appropriate error message.

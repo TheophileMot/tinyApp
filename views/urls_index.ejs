@@ -9,10 +9,15 @@
       <% include partials/_header %>
     </header>
     <div class="bigMargin">
+      <% if (errorMsg) { %>
+        <h2 id="hint"><%= errorMsg %></h2>
+      <% } %>
       <% if (!Object.keys(urls).length) { %>
         <p>You have no saved shortcuts.</p>
       <% } else { %>
-        <h2>hint: click on the clipboard to copy the link</h2>
+        <% if (!errorMsg) { %>
+          <h2 id="hint">Hint: click on the clipboard to copy the shortcut.</h2>
+        <% } %>
         <table>
           <% for (let url in urls) { %>
             <tr>

@@ -1,5 +1,7 @@
-// TODO: add click count
-// TODO: add date; reset date on update URL
+// todo: add click count
+// todo: add date; reset date on update URL
+// todo: prefix incomplete URLs with http://
+// todo: add regex to catch all other pages
 
 const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
@@ -14,7 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
   keys: ['kind of secret', 'please don\'t hack the server'],
-  maxAge: 10 * 60 * 1000
+  maxAge: 24 * 60 * 60 * 1000
 }));
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -75,7 +77,13 @@ function doesEmailExist(email) {
 // =============== GET ===============
 
 app.get('/', (req, res) => {
-  res.redirect('/urls');
+  const userID = req.session.userID;
+
+  if (users[userID]) {
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.get('/register', (req, res) => {
@@ -102,6 +110,8 @@ app.get('/login', (req, res) => {
 
 app.get('/urls', (req, res) => {
   const userID = req.session.userID;
+  const errorMsg = req.session.errorMsg;
+  req.session.errorMsg = null;
 
   if (!users[userID]) {
     req.session.errorMsg = 'You must be logged in to see your list of saved URLS. Please log in or register.';
@@ -109,19 +119,23 @@ app.get('/urls', (req, res) => {
   } else {
     const templateVars = {
       urls: filterByID(userID),
-      email: users[userID].email
+      email: users[userID].email,
+      errorMsg: errorMsg
     };
     res.render('urls_index', templateVars);
   }
 });
 
 app.get('/urls/new', (req, res) => {
+  const userID = req.session.userID;
+
   // make user log in before they can shorten a new URL
-  if (!users[req.session.userID]) {
+  if (!users[userID]) {
+    req.session.errorMsg = 'Please log in or register to be able to shorten URLs.';
     res.redirect('/login');
   } else {
     const templateVars = {
-      email: users[req.session.userID].email
+      email: users[userID].email
     };
 
     res.render('urls_new', templateVars);
@@ -134,6 +148,7 @@ app.get('/urls/:id', (req, res) => {
 
   // make sure user is logged in
   if (!users[userID]) {
+    req.session.errorMsg = 'Please log in or register.';
     res.redirect('/login');
   // give error message if short URL doesn't exist in database, or if URL doesn't belong to user
   } else if (!urlDatabase[shortURL] || urlDatabase[shortURL].owner !== userID) {
@@ -155,9 +170,16 @@ app.get('/urls/:id', (req, res) => {
 });
 
 app.get('/u/:id', (req, res) => {
-  // redirect to start page if short URL doesn't exist in database
+  // redirect if short URL doesn't exist in database
   if (!urlDatabase[req.params.id]) {
-    res.redirect('/');
+    const userID = req.session.userID;
+    if (!users[userID]) {
+      req.session.errorMsg = 'Sorry, that shortcut does not exist. Perhaps you would like to log in or register?';
+      res.redirect('/login');
+    } else {
+      req.session.errorMsg = 'Sorry, that shortcut does not exist. Here are your saved shortcuts.';
+      res.redirect('/urls');
+    }
   } else {
     const longURL = urlDatabase[req.params.id].URL;
     res.redirect(longURL);
@@ -167,6 +189,7 @@ app.get('/u/:id', (req, res) => {
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
+
 
 // =============== POST ==============
 
@@ -218,24 +241,48 @@ app.post('/logout', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
-  const longURL = req.body.longURL;
-  let shortURL = generateRandomString();
-  while (urlDatabase[shortURL]) {
-    shortURL = generateRandomString();
+  const userID = req.session.userID;
+
+  // make sure user is logged in
+  if (!users[userID]) {
+    req.session.errorMsg = 'Please log in or register.';
+    res.redirect('/login');
+  } else {
+    const longURL = req.body.longURL;
+    let shortURL = generateRandomString();
+    while (urlDatabase[shortURL]) {
+      shortURL = generateRandomString();
+    }
+    urlDatabase[shortURL] = { owner: req.session.userID, URL: longURL };
+    res.redirect('/urls/' + shortURL);
   }
-  urlDatabase[shortURL] = { owner: req.session.userID, URL: longURL };
-  res.redirect('/urls/' + shortURL);
 });
 
 app.post('/urls/:id', (req, res) => {
-  const{ shortURL, longURL } = req.body;
-  urlDatabase[shortURL] = { owner: req.session.userID, URL: longURL };
-  res.redirect('/urls/' + shortURL);
+  const userID = req.session.userID;
+
+  // make sure user is logged in
+  if (!users[userID]) {
+    req.session.errorMsg = 'Please log in or register.';
+    res.redirect('/login');
+  } else {
+    const{ shortURL, longURL } = req.body;
+    urlDatabase[shortURL] = { owner: req.session.userID, URL: longURL };
+    res.redirect('/urls/' + shortURL);
+  }
 });
 
 app.post('/urls/:id/delete', (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect('/urls');
+  const userID = req.session.userID;
+
+  // make sure user is logged in
+  if (!users[userID]) {
+    req.session.errorMsg = 'Please log in or register.';
+    res.redirect('/login');
+  } else {
+    delete urlDatabase[req.params.id];
+    res.redirect('/urls');
+  }
 });
 
 // ============== LISTEN =============
