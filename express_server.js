@@ -2,6 +2,7 @@
 // todo: add date; reset date on update URL
 // todo: prefix incomplete URLs with http://
 // todo: add regex to catch all other pages
+// note: error messages not quite consistent: e.g., /urls/[bad ID] shows its own error message, while other pages are passed errorMsg
 
 const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
@@ -258,30 +259,42 @@ app.post('/urls', (req, res) => {
   }
 });
 
+// update an URL
 app.post('/urls/:id', (req, res) => {
   const userID = req.session.userID;
 
-  // make sure user is logged in
+  // make sure user is logged in and owns the URL
   if (!users[userID]) {
     req.session.errorMsg = 'Please log in or register.';
     res.redirect('/login');
   } else {
     const{ shortURL, longURL } = req.body;
-    urlDatabase[shortURL] = { owner: req.session.userID, URL: longURL };
-    res.redirect('/urls/' + shortURL);
+    if (!urlDatabase[shortURL] || urlDatabase[shortURL].owner !== userID) {
+      req.session.errorMsg = 'Sorry, you cannot edit that URL.';
+      res.redirect('/urls/');
+    } else {
+      urlDatabase[shortURL] = { owner: req.session.userID, URL: longURL };
+      res.redirect('/urls/' + shortURL);
+    }
   }
 });
 
 app.post('/urls/:id/delete', (req, res) => {
   const userID = req.session.userID;
 
-  // make sure user is logged in
+  // make sure user is logged in and owns the URL
   if (!users[userID]) {
     req.session.errorMsg = 'Please log in or register.';
     res.redirect('/login');
   } else {
-    delete urlDatabase[req.params.id];
-    res.redirect('/urls');
+    const{ shortURL, longURL } = req.body;
+    if (!urlDatabase[shortURL] || urlDatabase[shortURL].owner !== userID) {
+      req.session.errorMsg = 'Sorry, you cannot delete that URL.';
+      res.redirect('/urls/');
+    } else {
+      delete urlDatabase[req.params.id];
+      res.redirect('/urls');
+    }
   }
 });
 
