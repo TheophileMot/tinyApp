@@ -1,3 +1,6 @@
+// TODO: add click count
+// TODO: add date; reset date on update URL
+
 const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
@@ -72,22 +75,28 @@ function doesEmailExist(email) {
 // =============== GET ===============
 
 app.get('/', (req, res) => {
-  res.redirect('/urls/new');
+  res.redirect('/urls');
 });
 
 app.get('/register', (req, res) => {
+  const errorMsg = req.session.errorMsg;
+  req.session.errorMsg = null;
+
   if (users[req.session.userID]) {
     res.redirect('/');
   } else {
-    res.render('register', { email: null });
+    res.render('register', { email: null, errorMsg: errorMsg });
   }
 });
 
 app.get('/login', (req, res) => {
+  const errorMsg = req.session.errorMsg;
+  req.session.errorMsg = null;
+
   if (users[req.session.userID]) {
     res.redirect('/');
   } else {
-    res.render('login', { email: null });
+    res.render('login', { email: null, errorMsg: errorMsg });
   }
 });
 
@@ -95,6 +104,7 @@ app.get('/urls', (req, res) => {
   const userID = req.session.userID;
 
   if (!users[userID]) {
+    req.session.errorMsg = 'You must be logged in to see your list of saved URLS. Please log in or register.';
     res.redirect('/login');
   } else {
     const templateVars = {
@@ -165,12 +175,12 @@ app.post('/register', (req, res) => {
 
   // validate e-mail and password
   if (!email || !password) {
-    // email and password should not be empty because the form already validates them. But just in case...
+    // email and password should not be empty because the form already validates them before POSTing. But just in case...
+    // (Let's leave this as a 400 rather than redirecting. Bad user!)
     res.status(400).send('Bad request. How did you get around the form? Maybe you\'re cheating with curl?');
-    return;
   } else if (doesEmailExist(email)) {
-    res.status(400).send('Error: that e-mail address already exists.');
-    return;
+    req.session.errorMsg = 'Error: that e-mail address already exists. Please log in with the correct password or register for a new account.';
+    res.redirect('/register');
   } else {
     let randomID = generateRandomString();
     while (users[randomID]) {
@@ -190,9 +200,11 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
   const userID = findIDfromEmail(req.body.email);
   if (!userID) {
-    res.status(403).send('Error: no such user.');
+    req.session.errorMsg = 'No such user exists. Please try again or register for a new account.';
+    res.redirect('login');
   } else if (!bcrypt.compareSync(req.body.password, users[userID].hashedPassword)) {
-    res.status(403).send('Error: wrong password.');
+    req.session.errorMsg = 'Wrong password! Please try again or register for a new account.';
+    res.redirect('login');
   } else {
     req.session.userID = userID;
     res.redirect('/');
@@ -201,7 +213,8 @@ app.post('/login', (req, res) => {
 
 app.post('/logout', (req, res) => {
   req.session.userID = null;
-  res.redirect('/urls');
+  req.session.errorMsg = 'You have been logged out.';
+  res.redirect('/login');
 });
 
 app.post('/urls', (req, res) => {

@@ -9,6 +9,9 @@
       <% include partials/_header %>
     </header>
     <div class="bigMargin">
+      <% if (errorMsg) { %>
+        <h2><%= errorMsg %></h2>
+      <% } %>
       <form action="/register" method="POST">
         <fieldset>
           <legend><span class="legend">Register</span></legend>
