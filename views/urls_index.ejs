@@ -19,20 +19,26 @@
           <h2 id="hint">Hint: click on the clipboard icon to copy the shortcut.</h2>
         <% } %>
         <table>
-          <th>
-            <td></td><td></td><td></td><td></td><td></td>
-            <td>#times used since creation</td>
-            <td>/ last update</td>
+          <tr>
+            <th></th><th></th><th></th><th></th><th></th><th></th>
+            <th colspan="2" class="category1">#times used</th>
+            <th></th>
+            <th colspan="3" class="category2">date</th>
+          </tr>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td>
+            <td>since creation</td>
+            <td>since last update</td>
             <td></td>
             <td>created</td>
-            <td>updated</td>
+            <td>last updated</td>
             <td>last used</td>
-          </th>
+          </tr>
           <% for (let url in urls) { %>
             <tr>
               <td>
                 <button class="icon" onclick="copyToClipboard('http://localhost:8000/u/<%= url %>')">📋</button>
-                <%= url %></td><td>⤑</td><td><%= urls[url].URL %></td>
+                <%= url %></td><td>⤑</td><td><%= urls[url].abbreviatedURL %></td>
               <td>
                 <form action=<%= `/urls/${url}` %> method="GET">
                   <label></label>
@@ -46,20 +52,20 @@
                 </form>
               </td>
               <td class="spacer"></td>
-              <td>
+              <td class="category1">
                 <%= urls[url].usedCount.sinceCreated %>
               </td>
-              <td>
+              <td class="category1">
                 <%= urls[url].usedCount.sinceLastUpdated %>
               </td>
               <td class="spacer"></td>
-              <td>
+              <td class="category2">
                 <%= urls[url].date.format('created') %>
               </td>
-              <td>
+              <td class="category2">
                 <%= urls[url].date.format('lastUpdated') %>
               </td>
-              <td>
+              <td class="category2">
                 <%= urls[url].date.format('lastUsed') %>
               </td>
             </tr>

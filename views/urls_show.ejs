@@ -13,11 +13,13 @@
         <h1>Sorry!</h1>
         <p>Either that shortcut is invalid, or you don't have access to it.</p>
       <% } else { %>      
-      <div>
-        <h2 id="hint">Hint: click on the clipboard icon to copy the shortcut.</h2>
-      </div>
-      <button class="icon" onclick="copyToClipboard('http://localhost:8000/u/<%= shortURL %>')">📋</button>
-      <%=  shortURL %> ⤑ <span class="ghost"><%= longURL %></span>
+        <div>
+          <h2 id="hint">Hint: click on the clipboard icon to copy the shortcut.</h2>
+        </div>
+        <p>
+          <button class="icon" onclick="copyToClipboard('http://localhost:8000/u/<%= shortURL %>')">📋</button>
+          <%=  shortURL %> ⤑ <span class="ghost"><%= longURL %></span>
+        </p>
         <form action=<%= `/urls/${shortURL}` %> method="POST">
           <label for="longURL">Update URL:</label>
           <input type="hidden" value=<%= shortURL %> name="shortURL">

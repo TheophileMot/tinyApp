@@ -42,31 +42,43 @@ function makeProperURL(url) {
   }
 }
 
+// elide middle of strings if they are too long (i.e., "[beginning]...[end]")
+function abbreviate(str) {
+  const MAX_TOLERATED_LENGTH = 60;
+  if (str.length < MAX_TOLERATED_LENGTH) {
+    return str;
+  } else {
+    return str.slice(0, MAX_TOLERATED_LENGTH / 2) + '...' + str.slice(-MAX_TOLERATED_LENGTH / 2);
+  }
+}
+
 // ========= fake databases ==========
 
-const urlDatabase = {
-  /*'33zwdo81': {
-    owner: 'cfdulsgp',
-    URL: 'http://www.lighthouselabs.ca',
-    usedCount: {
-      sinceCreated: 19,
-      sinceLastUpdated: 1
-    }
-    date: {
-      created: (Date object),
-      lastUpdated: (Date object),
-      lastUsed: (Date object)
-    }
-  }*/
-};
+// URL database. Typical entry:
+//   'cfdulsgp': {
+//     owner: 'cfdulsgp',
+//     URL: 'http://www.cbc.ca/news/canada/ottawa/u-of-o-student-union-members-under-investigation-for-fraud-1.4780695',
+//     abbreviatedURL: 'http://www.cbc.ca/news/canada/...estigation-for-fraud-1.4780695',
+//     usedCount: {
+//       sinceCreated: 19,
+//       sinceLastUpdated: 1
+//     }
+//     date: {
+//       format: function(dateType) { ... },
+//       created: (Date object),
+//       lastUpdated: (Date object),
+//       lastUsed: (Date object)
+//     }
+//   }
+const urlDatabase = {};
 
-const users = {
-  'cfdulsgp': {
-    id: 'cfdulsgp',
-    email: 'a@a.a',
-    hashedPassword: '$2a$10$G49vwTsbvPh10l3PytdvMOZy.cdNeGPfNgFh6L2BwKtFMD/4LI66W'
-  }
-};
+// User database. Typical entry:
+//   'cfdulsgp': {
+//     id: 'cfdulsgp',
+//     email: 'a@a.a',
+//     hashedPassword: '$2a$10$G49vwTsbvPh10l3PytdvMOZy.cdNeGPfNgFh6L2BwKtFMD/4LI66W'
+//   }
+const users = {};
 
 // find only those URLs owned by a given user
 function filterByID(userID) {
@@ -89,6 +101,7 @@ function findIDfromEmail(email) {
   return undefined;
 }
 
+// check whether e-mail exists in database to prevent multiple registration under same address
 function doesEmailExist(email) {
   for (let user in users) {
     if (users[user].email === email ) { return true; }
@@ -98,6 +111,7 @@ function doesEmailExist(email) {
 
 // =============== GET ===============
 
+// if page isn't specified, redirect to index or log in
 app.get('/', (req, res) => {
   const userID = req.session.userID;
 
@@ -228,7 +242,7 @@ app.get(/./, (req, res) => {
 // =============== POST ==============
 
 app.post('/register', (req, res) => {
-  const{ email, password } = req.body;
+  const { email, password } = req.body;
 
   if (!email || !password) {
     // email and password should not be empty because the form already validates them before POSTing. But just in case...
@@ -288,8 +302,9 @@ app.post('/urls', (req, res) => {
       shortURL = generateRandomString();
     }
     urlDatabase[shortURL] = {
-      owner: req.session.userID,
+      owner: userID,
       URL: longURL,
+      abbreviatedURL: abbreviate(longURL),
       usedCount: {
         sinceCreated: 0,
         sinceLastUpdated: 0
@@ -331,17 +346,18 @@ app.post('/urls/:id', (req, res) => {
     req.session.errorMsg = 'Please log in or register.';
     res.redirect('/login');
   } else {
-    const{ shortURL, longURL } = req.body;
+    const shortURL = req.body.shortURL;
+    const longURL = makeProperURL(req.body.longURL);
     if (!urlDatabase[shortURL] || urlDatabase[shortURL].owner !== userID) {
       req.session.errorMsg = 'Sorry, you cannot edit that URL.';
       res.redirect('/urls/');
     } else {
       // check to see if there was any change; if not, don't adjust statistics
-      if (urlDatabase[shortURL].URL !== makeProperURL(longURL)) {
-        urlDatabase[shortURL].URL = makeProperURL(longURL);
+      if (urlDatabase[shortURL].URL !== longURL) {
+        urlDatabase[shortURL].URL = longURL;
+        urlDatabase[shortURL].abbreviatedURL = abbreviate(longURL);
         urlDatabase[shortURL].usedCount.sinceLastUpdated = 0;
         urlDatabase[shortURL].date.lastUpdated = new Date();
-        urlDatabase[shortURL].date.lastUsed = null;
       }
       res.redirect('/urls/' + shortURL);
     }
@@ -357,12 +373,13 @@ app.post('/urls/:id/delete', (req, res) => {
     req.session.errorMsg = 'Please log in or register.';
     res.redirect('/login');
   } else {
-    const{ shortURL, longURL } = req.body;
+    const shortURL = req.params.id;
     if (!urlDatabase[shortURL] || urlDatabase[shortURL].owner !== userID) {
       req.session.errorMsg = 'Sorry, you cannot delete that URL.';
       res.redirect('/urls/');
     } else {
       delete urlDatabase[shortURL];
+      req.session.errorMsg = 'URL deleted.';
       res.redirect('/urls');
     }
   }

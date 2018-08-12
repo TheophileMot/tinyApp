@@ -49,15 +49,6 @@ form {
   width: 50%;
 }
 
-table {
-  padding: 0px;
-}
-
-td {
-  padding: 10px;
-  font-size: 90%;
-}
-
 a {
   color: #44D;
 }
@@ -67,9 +58,38 @@ a {
 }
 
 .spacer {
-  width: 50px;
+  width: 10px;
 }
 
 .longInput {
-  width: 300px;
+  width: 500px;
+}
+
+table {
+  padding: 0px;
+}
+
+td {
+  padding: 10px;
+  font-size: 70%;
+  text-align: center;
+}
+
+th.category1 {
+  background-color: #DAB;
+}
+
+td.category1 {
+  text-align: right;
+  background-color: #FDE;
+  font-size: 65%;
+}
+
+th.category2 {
+  background-color: #D9C;
+}
+
+td.category2 {
+  background-color: #FCF;
+  font-size: 65%;
 }
