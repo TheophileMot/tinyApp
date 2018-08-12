@@ -14,7 +14,7 @@
         <p>Either that shortcut is invalid, or you don't have access to it.</p>
       <% } else { %>      
       <div>
-        <h2 id="hint">Hint: click on the clipboard to copy the shortcut.</h2>
+        <h2 id="hint">Hint: click on the clipboard icon to copy the shortcut.</h2>
       </div>
       <button class="icon" onclick="copyToClipboard('http://localhost:8000/u/<%= shortURL %>')">📋</button>
       <%=  shortURL %> ⤑ <span class="ghost"><%= longURL %></span>

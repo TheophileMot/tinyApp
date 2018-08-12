@@ -1,8 +1,7 @@
 // todo: add click count
 // todo: add date; reset date on update URL
-// todo: prefix incomplete URLs with http://
-// todo: add regex to catch all other pages
 // note: error messages not quite consistent: e.g., /urls/[bad ID] shows its own error message, while other pages are passed errorMsg
+// note: makeProperURL is simple for now
 
 const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
@@ -16,7 +15,7 @@ const PORT = 8000;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
-  keys: ['kind of secret', 'please don\'t hack the server'],
+  keys: ['very secret key', 'please don\'t hack the server'],
   maxAge: 24 * 60 * 60 * 1000
 }));
 app.set('view engine', 'ejs');
@@ -25,22 +24,51 @@ app.use(express.static('public'));
 
 
 
-// ======= string generation =========
+// ======= string manipulation =======
 
-// return string of 8 characters in [0-9][a-z]
+// return string of 8 characters in [0-9][a-z]: to get each character, map a random number in [0-35]
+//   to the ASCII code for [0-9] or [a-z].
 function generateRandomString() {
   return String.fromCharCode(...Array(8).fill(0).map( () => Math.floor(Math.random() * 36)).map( x => x + (x > 9 ? 87 : 48)));
+}
+
+// format a URL by making sure it starts with 'http://' or 'https://'. Otherwise, ambiguous URLs like 'google.ca'
+//   might redirect to /localhost/google.ca.
+function makeProperURL(url) {
+  if (url.match(/^https?:\/\//)) {
+    return url;
+  } else {
+    return 'http://' + url;
+  }
 }
 
 // ========= fake databases ==========
 
 const urlDatabase = {
-  '33zwdo81': {
+  /*'33zwdo81': {
     owner: 'cfdulsgp',
-    URL: 'http://www.lighthouselabs.ca'
+    URL: 'http://www.lighthouselabs.ca',
+    usedCount: {
+      sinceCreated: 19,
+      sinceLastUpdated: 1
+    }
+    date: {
+      created: (Date object),
+      lastUpdated: (Date object),
+      lastUsed: (Date object)
+    }
+  }*/
+};
+
+const users = {
+  'cfdulsgp': {
+    id: 'cfdulsgp',
+    email: 'a@a.a',
+    hashedPassword: '$2a$10$G49vwTsbvPh10l3PytdvMOZy.cdNeGPfNgFh6L2BwKtFMD/4LI66W'
   }
 };
 
+// find only those URLs owned by a given user
 function filterByID(userID) {
   let result = {};
   for (let shortURL in urlDatabase) {
@@ -51,14 +79,7 @@ function filterByID(userID) {
   return result;
 }
 
-const users = {
-  'cfdulsgp': {
-    id: 'cfdulsgp',
-    email: 'a@a.a',
-    hashedPassword: '$2a$10$G49vwTsbvPh10l3PytdvMOZy.cdNeGPfNgFh6L2BwKtFMD/4LI66W'
-  }
-};
-
+// find user ID associated with a given e-mail address
 function findIDfromEmail(email) {
   for (let userID in users) {
     if (users[userID].email === email) {
@@ -109,6 +130,7 @@ app.get('/login', (req, res) => {
   }
 });
 
+// show index of user's URLs
 app.get('/urls', (req, res) => {
   const userID = req.session.userID;
   const errorMsg = req.session.errorMsg;
@@ -127,6 +149,7 @@ app.get('/urls', (req, res) => {
   }
 });
 
+// show page to create new shortened URL
 app.get('/urls/new', (req, res) => {
   const userID = req.session.userID;
 
@@ -143,6 +166,7 @@ app.get('/urls/new', (req, res) => {
   }
 });
 
+// show page to edit long URL
 app.get('/urls/:id', (req, res) => {
   const userID = req.session.userID;
   const shortURL = req.params.id;
@@ -170,9 +194,11 @@ app.get('/urls/:id', (req, res) => {
   }
 });
 
+// redirect to long URL, whether user is logged in or not
 app.get('/u/:id', (req, res) => {
-  // redirect if short URL doesn't exist in database
-  if (!urlDatabase[req.params.id]) {
+  const shortURL = req.params.id;
+  // first make sure short URL exists in database
+  if (!urlDatabase[shortURL]) {
     const userID = req.session.userID;
     if (!users[userID]) {
       req.session.errorMsg = 'Sorry, that shortcut does not exist. Perhaps you would like to log in or register?';
@@ -182,7 +208,10 @@ app.get('/u/:id', (req, res) => {
       res.redirect('/urls');
     }
   } else {
-    const longURL = urlDatabase[req.params.id].URL;
+    const longURL = urlDatabase[shortURL].URL;
+    urlDatabase[shortURL].usedCount.sinceCreated += 1;
+    urlDatabase[shortURL].usedCount.sinceLastUpdated += 1;
+    urlDatabase[shortURL].date.lastUsed = new Date();
     res.redirect(longURL);
   }
 });
@@ -191,13 +220,16 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
+// catch all other GET requests (these are all invalid; redirect to home)
+app.get(/./, (req, res) => {
+  res.redirect('/');
+});
 
 // =============== POST ==============
 
 app.post('/register', (req, res) => {
   const{ email, password } = req.body;
 
-  // validate e-mail and password
   if (!email || !password) {
     // email and password should not be empty because the form already validates them before POSTing. But just in case...
     // (Let's leave this as a 400 rather than redirecting. Bad user!)
@@ -241,6 +273,7 @@ app.post('/logout', (req, res) => {
   res.redirect('/login');
 });
 
+// create a URL
 app.post('/urls', (req, res) => {
   const userID = req.session.userID;
 
@@ -249,17 +282,47 @@ app.post('/urls', (req, res) => {
     req.session.errorMsg = 'Please log in or register.';
     res.redirect('/login');
   } else {
-    const longURL = req.body.longURL;
+    const longURL = makeProperURL(req.body.longURL);
     let shortURL = generateRandomString();
     while (urlDatabase[shortURL]) {
       shortURL = generateRandomString();
     }
-    urlDatabase[shortURL] = { owner: req.session.userID, URL: longURL };
+    urlDatabase[shortURL] = {
+      owner: req.session.userID,
+      URL: longURL,
+      usedCount: {
+        sinceCreated: 0,
+        sinceLastUpdated: 0
+      },
+      date: {
+        format: function(dateType) {
+          const date = this[dateType];
+          if (date) {
+            const now = new Date();
+            if (now - date < 10 * 1000) {
+              return 'a few seconds ago';
+            } else if (now - date < 60 * 1000) {
+              return 'less than a minute ago';
+            } else if ((now - date < 24 * 60 * 60 * 1000) && now.getDate() === date.getDate()) {
+              return 'today at ' + date.getHours() + ':' + date.getMinutes().toString().padStart(2, '0');
+            } else {
+              return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
+                + ' at ' + date.getHours() + ':' + date.getMinutes().toString().padStart(2, '0');
+            }
+          } else {
+            return '';
+          }
+        },
+        created: new Date(),
+        lastUpdated: null,
+        lastUsed: null
+      }
+    };
     res.redirect('/urls/' + shortURL);
   }
 });
 
-// update an URL
+// update a URL; adjust related statistics in database
 app.post('/urls/:id', (req, res) => {
   const userID = req.session.userID;
 
@@ -273,12 +336,19 @@ app.post('/urls/:id', (req, res) => {
       req.session.errorMsg = 'Sorry, you cannot edit that URL.';
       res.redirect('/urls/');
     } else {
-      urlDatabase[shortURL] = { owner: req.session.userID, URL: longURL };
+      // check to see if there was any change; if not, don't adjust statistics
+      if (urlDatabase[shortURL].URL !== makeProperURL(longURL)) {
+        urlDatabase[shortURL].URL = makeProperURL(longURL);
+        urlDatabase[shortURL].usedCount.sinceLastUpdated = 0;
+        urlDatabase[shortURL].date.lastUpdated = new Date();
+        urlDatabase[shortURL].date.lastUsed = null;
+      }
       res.redirect('/urls/' + shortURL);
     }
   }
 });
 
+// delete a URL
 app.post('/urls/:id/delete', (req, res) => {
   const userID = req.session.userID;
 
@@ -292,7 +362,7 @@ app.post('/urls/:id/delete', (req, res) => {
       req.session.errorMsg = 'Sorry, you cannot delete that URL.';
       res.redirect('/urls/');
     } else {
-      delete urlDatabase[req.params.id];
+      delete urlDatabase[shortURL];
       res.redirect('/urls');
     }
   }

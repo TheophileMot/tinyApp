@@ -16,9 +16,18 @@
         <p>You have no saved shortcuts.</p>
       <% } else { %>
         <% if (!errorMsg) { %>
-          <h2 id="hint">Hint: click on the clipboard to copy the shortcut.</h2>
+          <h2 id="hint">Hint: click on the clipboard icon to copy the shortcut.</h2>
         <% } %>
         <table>
+          <th>
+            <td></td><td></td><td></td><td></td><td></td>
+            <td>#times used since creation</td>
+            <td>/ last update</td>
+            <td></td>
+            <td>created</td>
+            <td>updated</td>
+            <td>last used</td>
+          </th>
           <% for (let url in urls) { %>
             <tr>
               <td>
@@ -35,6 +44,23 @@
                   <label></label>
                   <input type="submit" value="Delete">
                 </form>
+              </td>
+              <td class="spacer"></td>
+              <td>
+                <%= urls[url].usedCount.sinceCreated %>
+              </td>
+              <td>
+                <%= urls[url].usedCount.sinceLastUpdated %>
+              </td>
+              <td class="spacer"></td>
+              <td>
+                <%= urls[url].date.format('created') %>
+              </td>
+              <td>
+                <%= urls[url].date.format('lastUpdated') %>
+              </td>
+              <td>
+                <%= urls[url].date.format('lastUsed') %>
               </td>
             </tr>
           <%} %>
