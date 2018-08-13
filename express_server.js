@@ -1,8 +1,3 @@
-// todo: add click count
-// todo: add date; reset date on update URL
-// note: error messages not quite consistent: e.g., /urls/[bad ID] shows its own error message, while other pages are passed errorMsg
-// note: makeProperURL is simple for now
-
 const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
@@ -223,8 +218,11 @@ app.get('/u/:id', (req, res) => {
     }
   } else {
     const longURL = urlDatabase[shortURL].URL;
+    // update statistics; if URL has never been updated, don't track usedCount.sinceLastUpdated
     urlDatabase[shortURL].usedCount.sinceCreated += 1;
-    urlDatabase[shortURL].usedCount.sinceLastUpdated += 1;
+    urlDatabase[shortURL].usedCount.sinceLastUpdated = urlDatabase[shortURL].usedCount.sinceLastUpdated
+      ? urlDatabase[shortURL].usedCount.sinceLastUpdated + 1
+      : null;
     urlDatabase[shortURL].date.lastUsed = new Date();
     res.redirect(longURL);
   }
@@ -307,7 +305,7 @@ app.post('/urls', (req, res) => {
       abbreviatedURL: abbreviate(longURL),
       usedCount: {
         sinceCreated: 0,
-        sinceLastUpdated: 0
+        sinceLastUpdated: null
       },
       date: {
         format: function(dateType) {

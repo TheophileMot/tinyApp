@@ -1,16 +1,31 @@
-# redesigned logic for **logout**
+# tinyApp URL shortener
 
-*POST /logout*:
+tinyApp is a full stack web application built with Node and Express that allows users to shorten long URLs and track how many times these shortcuts are used.
 
-    deletes cookie
-    redirects to /urls
+## Screenshots
 
-... but *GET /urls*:
 
-    returns HTML with a relevant error message
 
-Therefore, according to the behaviour requirements, a user who logs out will get send to a dead end with an error message. Instead of this, I send them back to the **login** page with the 'error' message that they have successfully logged out.
+## Dependencies
 
-# similar for **login** / **register** errors
+- Node
+- Express
+- EJS
+- bcrypt
+- body-parser
+- cookie-session
 
-Instead of a 400 error, I send the user back to the **login** / **register** page with an appropriate error message.
+## Getting started
+
+- Install all dependencies (`npm install`)
+- Run the server (`node express_server.js`)
+
+## Usage and features
+
+The application is pretty self-explanatory: users can log in to be able to shorten URLs; they can edit them and track basic statistics (date of creation, number of times the link was followed, etc.).
+
+The dates are presented in a user-friendly format (e.g., "a few seconds ago", or "today at 13:05" instead of "2018-08-12 at 13:05").
+
+Particularly long URLs are abbreviated in the index to save space (e.g., "httр://www.abcde...xyz.com").
+
+To avoid shenanigans, all URLs must start with "http://" or "https://"; the former is automatically added as a prefix if necessary.
