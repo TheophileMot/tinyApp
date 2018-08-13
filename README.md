@@ -4,7 +4,9 @@ tinyApp is a full stack web application built with Node and Express that allows 
 
 ## Screenshots
 
-
+!["main page: URL index with statistics"](https://github.com/TheophileMot/tinyApp/blob/master/docs/URLindex.png)
+!["creation of new shortcut"](https://github.com/TheophileMot/tinyApp/blob/master/docs/newURL.png)
+!["users can edit the URLs of their shortcuts"](https://github.com/TheophileMot/tinyApp/blob/master/docs/updateURL.png)
 
 ## Dependencies
 
